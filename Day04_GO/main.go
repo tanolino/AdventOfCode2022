@@ -36,8 +36,18 @@ func makeSection(s string) section {
 	}
 }
 
+func (s section) containsPoint(i int) bool {
+	return i >= s.start && i <= s.end
+}
+
 func (s1 section) contains(s2 section) bool {
-	return s1.start <= s2.start && s1.end >= s2.end
+	return s1.containsPoint(s2.start) &&
+		s1.containsPoint(s2.end)
+}
+
+func (s1 section) overlap(s2 section) bool {
+	return s1.containsPoint(s2.start) ||
+		s1.containsPoint(s2.end)
 }
 
 type pair struct {
@@ -58,6 +68,10 @@ func makePair(s string) pair {
 
 func (p pair) oneFullyContainsTheOther() bool {
 	return p.sec1.contains(p.sec2) || p.sec2.contains(p.sec1)
+}
+
+func (p pair) overlap() bool {
+	return p.sec1.overlap(p.sec2)
 }
 
 func readInput() []pair {
@@ -82,11 +96,17 @@ func readInput() []pair {
 func main() {
 	input := readInput()
 
-	counter := 0
+	contianCount := 0
+	overlapCount := 0
+
 	for _, p := range input {
 		if p.oneFullyContainsTheOther() {
-			counter++
+			contianCount++
+			overlapCount++
+		} else if p.overlap() {
+			overlapCount++
 		}
 	}
-	fmt.Println("Counted: ", counter)
+	fmt.Println("Contain: ", contianCount)
+	fmt.Println("Overlap: ", overlapCount)
 }
