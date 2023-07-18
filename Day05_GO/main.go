@@ -95,8 +95,20 @@ func (s stacks) toString() string {
 	return res
 }
 
-func (s stacks) move(from, to int) {
-	s[to].push(s[from].pop())
+func (s stacks) moveLike9000(cmd command) {
+	for i := 0; i < cmd.count; i++ {
+		s[cmd.to].push(s[cmd.from].pop())
+	}
+}
+
+func (s stacks) moveLike9001(cmd command) {
+	tmp := makeStack()
+	for i := 0; i < cmd.count; i++ {
+		tmp.push(s[cmd.from].pop())
+	}
+	for len(tmp) > 0 {
+		s[cmd.to].push(tmp.pop())
+	}
 }
 
 func (s stacks) getTopCrates() string {
@@ -179,19 +191,37 @@ func getInput() inputData {
 	}
 }
 
-func main() {
+func simulateCrane9000() {
 	input := getInput()
 	// fmt.Println(input.stacks.toString())
 
 	for _, cmd := range input.commands {
-		for i := 0; i < cmd.count; i++ {
 
-			// fmt.Println("Move ", cmd.from, " to ", cmd.to)
-			input.stacks.move(cmd.from, cmd.to)
+		// fmt.Println("Move ", cmd.from, " to ", cmd.to, " times ", cmd.count)
+		input.stacks.moveLike9000(cmd)
 
-			// fmt.Println(input.stacks.toString())
-		}
+		// fmt.Println(input.stacks.toString())
 	}
 	// fmt.Println(input.stacks.toString())
-	fmt.Println("Top Crates: ", input.stacks.getTopCrates())
+	fmt.Println("Top Crates (9000): ", input.stacks.getTopCrates())
+}
+
+func simulateCrane9001() {
+	input := getInput()
+	// fmt.Println(input.stacks.toString())
+
+	for _, cmd := range input.commands {
+
+		// fmt.Println("Move ", cmd.from, " to ", cmd.to, " times ", cmd.count)
+		input.stacks.moveLike9001(cmd)
+
+		// fmt.Println(input.stacks.toString())
+	}
+	// fmt.Println(input.stacks.toString())
+	fmt.Println("Top Crates (9001): ", input.stacks.getTopCrates())
+}
+
+func main() {
+	simulateCrane9000()
+	simulateCrane9001()
 }
