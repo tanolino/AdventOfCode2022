@@ -36,7 +36,14 @@ func (r rucksack) findDoubles() string {
 			res += string(cL)
 		}
 	}
+	if len(res) != 1 {
+		panic("Rucksack has too many doubles: " + res)
+	}
 	return res
+}
+
+func (r rucksack) all() string {
+	return r.left + r.right
 }
 
 func runeValue(c rune) int {
@@ -47,6 +54,23 @@ func runeValue(c rune) int {
 	} else {
 		panic("Can not determine value of " + string(c))
 	}
+}
+
+func commonElements(r1, r2, r3 rucksack) string {
+	res := ""
+	r2all := r2.all()
+	r3all := r3.all()
+	for _, ru := range r1.all() {
+		if strings.ContainsRune(r2all, ru) &&
+			strings.ContainsRune(r3all, ru) &&
+			!strings.ContainsRune(res, ru) {
+			res += string(ru)
+		}
+	}
+	if len(res) != 1 {
+		panic("common Elements is len() != 1  " + res)
+	}
+	return res
 }
 
 func readInput() []rucksack {
@@ -67,19 +91,36 @@ func readInput() []rucksack {
 	return res
 }
 
-func main() {
-	rucksacks := readInput()
+func solvePart1(rucksacks []rucksack) {
 	sumOfAllPrios := 0
 	for _, r := range rucksacks {
 		d := r.findDoubles()
 
-		prio := 0
 		for _, ru := range d {
-			prio += runeValue(ru)
+			sumOfAllPrios += runeValue(ru)
 		}
-
-		// fmt.Println("Rucksack ", r, " doubles: ", d, " prio: ", prio)
-		sumOfAllPrios += prio
 	}
-	fmt.Println("Prio sum: ", sumOfAllPrios)
+	fmt.Println("(Part 1) Prio sum: ", sumOfAllPrios)
+}
+
+func solvePart2(rucksacks []rucksack) {
+	sumOfAllPrios := 0
+	for i := 0; i+2 < len(rucksacks); i += 3 {
+		common := commonElements(
+			rucksacks[i],
+			rucksacks[i+1],
+			rucksacks[i+2],
+		)
+
+		for _, ru := range common {
+			sumOfAllPrios += runeValue(ru)
+		}
+	}
+	fmt.Println("(Part 2) Prio sum: ", sumOfAllPrios)
+}
+
+func main() {
+	rucksacks := readInput()
+	solvePart1(rucksacks)
+	solvePart2(rucksacks)
 }
