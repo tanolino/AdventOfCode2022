@@ -19,13 +19,21 @@ func isStart(s string) bool {
 	return true
 }
 
-func findStart(s string) int {
-	for i := 0; i+3 < len(s); i++ {
-		if isStart(s[i : i+4]) {
-			return i + 4 // start pos is after the sequence
+func findStart(s string, l int) int {
+	for i := 0; i+l <= len(s); i++ {
+		if isStart(s[i : i+l]) {
+			return i + l // start pos is after the sequence
 		}
 	}
 	panic("No start found")
+}
+
+func findStartOfPackage(s string) int {
+	return findStart(s, 4)
+}
+
+func findStartOfMessage(s string) int {
+	return findStart(s, 14)
 }
 
 func main() {
@@ -34,5 +42,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println("Start: ", findStart(string(b)))
+	txt := string(b)
+	fmt.Println("Start (Package): ", findStartOfPackage(txt))
+	fmt.Println("Start (Message): ", findStartOfMessage(txt))
 }
