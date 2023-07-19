@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 type pos struct {
 	x, y int
 }
@@ -29,6 +27,18 @@ func (p1 *pos) moveBy(p2 pos) {
 	p1.y += p2.y
 }
 
+func (p1 *pos) follow(p2 pos) {
+	diff := p2.diff(*p1)
+	if intAbs(diff.x) <= 1 &&
+		intAbs(diff.y) <= 1 {
+		return
+	}
+
+	// we need to move the tail
+	move := diff.clamp()
+	p1.moveBy(move)
+}
+
 // allow max distance of 1
 func (p pos) clamp() pos {
 	return pos{
@@ -42,33 +52,22 @@ type field struct {
 	head       pos
 	tail       pos
 	tailResult []pos
+	knots      []pos // points inbetween
 }
 
 func makeField() field {
 	tailResult := make([]pos, 1)
-	tailResult[0] = pos{0, 0}
+	// tailResult[0] = pos{0, 0}
 	return field{
-		head:       pos{0, 0},
-		tail:       pos{0, 0},
+		// head:       pos{0, 0},
+		// tail:       pos{0, 0},
 		tailResult: tailResult,
+		knots:      make([]pos, 0),
 	}
 }
 
-func (f *field) moveHeadByPos(p pos) {
-	f.head.moveBy(p)
-}
-
-func (f *field) moveTailAuto() {
-	diff := f.head.diff(f.tail)
-	if intAbs(diff.x) <= 1 &&
-		intAbs(diff.y) <= 1 {
-		return
-	}
-
-	// we need to move the tail
-	move := diff.clamp()
-	f.tail.moveBy(move)
-	f.addTailResult(f.tail)
+func (f *field) addKnots(num int) {
+	f.knots = append(f.knots, make([]pos, num)...)
 }
 
 func intAbs(i int) int {
@@ -89,6 +88,18 @@ func intClamp(i, min, max int) int {
 	}
 }
 
+func (f *field) moveHeadOneStep(move pos) {
+	f.head.moveBy(move)
+	var lastKnot *pos = &f.head
+	for i := range f.knots {
+		f.knots[i].follow(*lastKnot)
+		lastKnot = &f.knots[i]
+	}
+	f.tail.follow(*lastKnot)
+	f.addTailResult(f.tail)
+	// fmt.Println("Head:", f.head, "Tail:", f.tail)
+}
+
 func (f *field) moveHeadByCmd(cmd cmd) {
 	move, avail := mapPosDir[cmd.dir]
 	if !avail {
@@ -96,9 +107,7 @@ func (f *field) moveHeadByCmd(cmd cmd) {
 	}
 
 	for i := 0; i < cmd.steps; i++ {
-		f.moveHeadByPos(move)
-		f.moveTailAuto()
-		// fmt.Println("Head:", f.head, "Tail:", f.tail)
+		f.moveHeadOneStep(move)
 	}
 }
 
