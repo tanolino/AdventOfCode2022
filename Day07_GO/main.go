@@ -98,6 +98,9 @@ type processor struct {
 	lsCmd   bool
 }
 
+const deviceSpace = 70000000
+const deviceSpaceForUpdate = 30000000
+
 func (p *processor) procLine(s string) {
 	// fmt.Println("Processing ", s, " in ", p.current.name)
 	if s[0] == '$' {
@@ -155,24 +158,61 @@ func readInput(filename string) *myDir {
 	return rootDir
 }
 
-func findDirsRecursive(root *myDir) []*myDir {
+func findDirsRecursive(root *myDir, filter func(*myDir) bool) []*myDir {
 	res := make([]*myDir, 0)
-	if root.getSize() < 100000 {
+	if filter(root) {
 		res = append(res, root)
 	}
 	// no else, because files can count double
 	for _, d := range root.dirs {
-		res = append(res, findDirsRecursive(d)...)
+		res = append(res, findDirsRecursive(d, filter)...)
 	}
 	return res
+}
+
+func filterBelow100000(d *myDir) bool {
+	return d.getSize() < 100000
+}
+
+func solve_part1(rootDir *myDir) {
+	sum := 0
+	for _, d := range findDirsRecursive(
+		rootDir, filterBelow100000,
+	) {
+		sum += d.getSize()
+	}
+	fmt.Println("Sum of dirs with total size of max 100000 ", sum)
+}
+
+func solve_part2(rootDir *myDir) {
+	freeSpace := deviceSpace - rootDir.getSize()
+	spaceNeeded := deviceSpaceForUpdate - freeSpace
+	// We are looking for the smalles folder with
+	// more size then "spaceNeeded"
+
+	filter := func(d *myDir) bool {
+		return d.getSize() >= spaceNeeded
+	}
+
+	var delDir *myDir
+	var delDirSize int
+	for _, d := range findDirsRecursive(
+		rootDir, filter,
+	) {
+		dSize := d.getSize()
+		if delDir == nil || delDirSize > dSize {
+			delDir = d
+			delDirSize = dSize
+		}
+	}
+	fmt.Println("Smallest dir to delete for Update: ",
+		delDir.name, " Size: ", delDirSize)
 }
 
 func main() {
 	rootDir := readInput("input")
 	// rootDir.printOut("")
-	sum := 0
-	for _, d := range findDirsRecursive(rootDir) {
-		sum += d.getSize()
-	}
-	fmt.Println("Sum of dirs with total size of max 100000 ", sum)
+
+	solve_part1(rootDir)
+	solve_part2(rootDir)
 }
