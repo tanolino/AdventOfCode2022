@@ -19,7 +19,10 @@ type monkey struct {
 	inspections       int
 }
 
-type monkeyList []*monkey
+type monkeyList struct {
+	l            []*monkey
+	maximumWorry bool
+}
 
 func newMonkey(scan *bufio.Scanner) *monkey {
 	m := new(monkey)
@@ -166,12 +169,14 @@ func readMonkeys(filename string) monkeyList {
 	if err != nil {
 		panic(err)
 	}
-	res := make(monkeyList, 0)
+	res := make([]*monkey, 0)
 	scan := bufio.NewScanner(file)
 	for m := newMonkey(scan); m != nil; m = newMonkey(scan) {
 		res = append(res, m)
 	}
-	return res
+	return monkeyList{
+		l: res,
+	}
 }
 
 // (item, targetMonkey)
@@ -180,11 +185,14 @@ func (m *monkey) inspectAndThrow(monkeys *monkeyList) {
 		m.inspections++
 		item := m.items[0]
 		m.items = m.items[1:]
-		itemNew := m.operation(item) / 3
+		itemNew := m.operation(item)
+		if !monkeys.maximumWorry {
+			itemNew /= 3
+		}
 		if m.test(itemNew) {
-			(*monkeys)[m.targetOnTestTrue].catchItem(itemNew)
+			monkeys.l[m.targetOnTestTrue].catchItem(itemNew)
 		} else {
-			(*monkeys)[m.targetOnTestFalse].catchItem(itemNew)
+			monkeys.l[m.targetOnTestFalse].catchItem(itemNew)
 		}
 	}
 }
@@ -194,7 +202,7 @@ func (m *monkey) catchItem(item int) {
 }
 
 func (ml *monkeyList) oneRound() {
-	for _, m := range *ml {
+	for _, m := range ml.l {
 		m.inspectAndThrow(ml)
 	}
 }
@@ -206,14 +214,14 @@ func (ml *monkeyList) rounds(r int) {
 }
 
 func (ml monkeyList) printList() {
-	for _, m := range ml {
-		fmt.Println(m)
+	for _, m := range ml.l {
+		fmt.Println(m.name, m.inspections)
 	}
 }
 
 func (ml monkeyList) getMonkeyBusiness() int {
-	ins := make([]int, len(ml))
-	for i, m := range ml {
+	ins := make([]int, len(ml.l))
+	for i, m := range ml.l {
 		ins[i] = m.inspections
 	}
 	sort.Ints(ins)
