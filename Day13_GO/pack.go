@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 )
 
@@ -210,7 +211,7 @@ func (p pack) String() string {
 	return res
 }
 
-func readData(filename string) pack {
+func readDataAsPairs(filename string) pack {
 	res := make(pack, 0)
 	file, err := os.Open("data/" + filename)
 	if err != nil {
@@ -239,6 +240,56 @@ func readData(filename string) pack {
 			d1: p1,
 			d2: p2,
 		})
+	}
+	return res
+}
+
+func readDataAsList(filename string) []data {
+	res := make([]data, 0)
+	file, err := os.Open("data/" + filename)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	scan := bufio.NewScanner(file)
+
+	for scan.Scan() {
+		txt := scan.Text()
+		if len(txt) <= 0 {
+			continue
+		}
+		d, _ := parseData(txt)
+		res = append(res, d)
+	}
+	return res
+}
+
+func makeDividerPack(i int) data {
+	v := makeDataValue(i)
+	v2 := makeDataList([]data{v})
+	return makeDataList([]data{v2})
+}
+
+func readDecoderKey(filename string) int {
+	d := readDataAsList(filename)
+	div1 := makeDividerPack(2)
+	div2 := makeDividerPack(6)
+
+	d = append(d, div1)
+	d = append(d, div2)
+
+	sort.SliceStable(d, func(i, j int) bool {
+		return d[i].compare(d[j]) < 0
+	})
+
+	res := 1
+	for i, v := range d {
+		if div1.compare(v) == 0 {
+			res *= i + 1
+		} else if div2.compare(v) == 0 {
+			res *= i + 1
+		}
 	}
 	return res
 }

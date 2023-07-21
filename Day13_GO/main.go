@@ -2,12 +2,12 @@ package main
 
 import "fmt"
 
-func main() {
-	d := readData("input")
+func part1() {
+	d := readDataAsPairs("input")
 	sum := 0
 	for i, v := range d {
 		cmp := v.compare()
-		fmt.Println(v, "=====>", cmp)
+		// fmt.Println(v, "=====>", cmp)
 		if cmp < 0 {
 			sum += i + 1
 		} else if cmp == 0 {
@@ -16,7 +16,15 @@ func main() {
 			panic(err)
 		}
 	}
-	// 5362 too low
-	// 5832 too height
 	fmt.Println("Sum", sum)
+}
+
+func part2() {
+	key := readDecoderKey("input")
+	fmt.Println("Key: ", key)
+}
+
+func main() {
+	part1()
+	part2()
 }
