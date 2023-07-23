@@ -54,7 +54,7 @@ using Row = vector<Cell>;
 
 struct Field
 {
-    Coord offset;
+    int offset;
     size_t width;
     vector<Row> rows;
     size_t sandCount = 0;
@@ -165,10 +165,10 @@ Field buildField(Lines lines)
     max.x++;
 
     Field field;
-    field.offset = min;
+    field.offset = min.x;
     field.width = (max.x - min.x) + 1;
-    auto height = (max.y - min.y) + 1;
-    for (int i = 0; i < height; i++)
+    auto floor = max.y + 2;
+    for (int i = 0; i < floor; i++)
     {
         addRowToField(field);
     }
@@ -176,13 +176,11 @@ Field buildField(Lines lines)
     for (auto stroke : lines) {
         auto pts = interpolateLine(stroke);
         for (auto pt : pts){
-            pt = pt - field.offset;
+            pt.x -= field.offset;
             field.rows.at(pt.y).at(pt.x) = Rock;
         }
     }
 
-    // Begin value problem
-    addRowToField(field);
     return field;
 }
 
@@ -197,9 +195,9 @@ void printField(Field f)
     cout << endl;
 }
 
-bool spawnSand(Field& f)
+bool spawnSandPart1(Field& f)
 {
-    Coord sand{500 - f.offset.x, 0};
+    Coord sand{500 - f.offset, 0};
     while (true)
     {
         if (sand.y+1 >= f.rows.size())
@@ -226,6 +224,56 @@ bool spawnSand(Field& f)
     return true;
 }
 
+void extendFieldLeft(Field& f)
+{
+    for (auto& row : f.rows) {
+        row.insert(row.begin(), Air);
+    }
+    f.width++;
+    f.offset--;
+}
+
+void extendFieldRight(Field& f)
+{
+    for (auto& row : f.rows) {
+        row.push_back(Air);
+    }
+    f.width++;
+}
+
+bool spawnSandPart2(Field& f)
+{
+    Coord sand{500 - f.offset, 0};
+    while (true)
+    {
+        if (sand.y+1 >= f.rows.size()) {
+            break;
+        }
+        auto& nextRow = f.rows[sand.y+1];
+        if (nextRow[sand.x] == Air) {
+        } else if (nextRow.at(sand.x-1) == Air) {
+            sand.x--;
+        } else if (nextRow.at(sand.x+1) == Air) {
+            sand.x++;
+        } else {
+            // Can't move
+            break;
+        }
+        sand.y++;
+
+        // check for left and right border
+        if (sand.x == 0) {
+            extendFieldLeft(f);
+            sand.x++; // Because we changed the offset
+        } else if (sand.x+1 >= f.width) {
+            extendFieldRight(f);
+        }
+    }
+
+    f.rows[sand.y][sand.x] = Sand;
+    f.sandCount++;
+    return sand.y != 0;
+}
 // Main
 
 void runPart1(string file)
@@ -233,7 +281,17 @@ void runPart1(string file)
     auto input = readInput(file);
     auto field = buildField(input);
     printField(field);
-    while (spawnSand(field)) {}
+    while (spawnSandPart1(field)) {}
+    printField(field);
+    cout << "Counted sand: " << field.sandCount << endl;
+}
+
+void runPart2(string file)
+{
+    auto input = readInput(file);
+    auto field = buildField(input);
+    printField(field);
+    while (spawnSandPart2(field)) {}
     printField(field);
     cout << "Counted sand: " << field.sandCount << endl;
 }
@@ -241,5 +299,7 @@ void runPart1(string file)
 int main()
 {
     // runPart1("test");
-    runPart1("input");
+    // runPart1("input");
+    // runPart2("test");
+    runPart2("input");
 }
