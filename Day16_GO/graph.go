@@ -58,7 +58,9 @@ func makeGraph(v []valveDef) graph {
 		reach[i] = make([]int, valveCount)
 		for j := range reach[i] {
 			i_to_j := math.MaxInt
-			if contains(v[i].tunnels, v[j].name) {
+			if i == j {
+				i_to_j = 0
+			} else if contains(v[i].tunnels, v[j].name) {
 				i_to_j = 1
 			}
 			reach[i][j] = i_to_j

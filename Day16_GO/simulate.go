@@ -1,13 +1,10 @@
 package main
 
-import "fmt"
-
 type simulate struct {
 	graph    graph
-	open     []bool // already opened
-	position int    // I am here
-	released int    // steam released
-	passed   int    // minutes passed
+	position int // I am here
+	released int // steam released
+	passed   int // minutes passed
 }
 
 func makeSimulate(g graph) simulate {
@@ -20,26 +17,29 @@ func makeSimulate(g graph) simulate {
 	}
 	return simulate{
 		graph:    g,
-		open:     make([]bool, len(g.valves)),
 		position: pos,
 		released: 0,
 	}
 }
 
-func (s simulate) checkReleaseOn(v int) int {
+func (s simulate) checkReleaseOn(v int) (steam int, timePassed int) {
 	timeToActivate := s.graph.reach[s.position][v] + 1
-	runTime := 30 - timeToActivate - s.passed
-	return runTime * s.graph.valves[v].flow
+	runTime := (30 - timeToActivate) - s.passed
+	return runTime * s.graph.valves[v].flow, timeToActivate
 }
 
-func (s simulate) String() string {
-	res := ""
-	for i, o := range s.open {
-		if o {
-			res += fmt.Sprintln(i, "open")
+func (s *simulate) runScenario(val []int) int {
+	for _, v := range val {
+		rel, t := s.checkReleaseOn(v)
+		// fmt.Println("Debug: ", rel, t, s.passed)
+		if rel >= 0 {
+			// fmt.Println("Open ", s.graph.valves[v].name, " for ", rel)
+			s.released += rel
+			s.passed += t
+			s.position = v
 		} else {
-			res += fmt.Sprintln(i, "get", s.checkReleaseOn(i))
+			break
 		}
 	}
-	return res
+	return s.released
 }
